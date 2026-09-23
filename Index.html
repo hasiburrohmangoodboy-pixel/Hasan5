@@ -1,0 +1,2426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#080b12">
+<title>Take Money</title>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;min-height:100%;background:#080b12;color:#fff;}
+body{overflow-x:hidden;}
+button,input,select{font:inherit;}
+button{border:0;cursor:pointer;}
+#app{width:100%;min-height:100vh;padding-bottom:82px;}
+
+#loadingScreen{
+    position:fixed;
+    inset:0;
+    z-index:99999;
+    background:#080b12;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    transition:.3s ease;
+}
+
+.loader{
+    width:42px;
+    height:42px;
+    border:4px solid rgba(255,255,255,.12);
+    border-top-color:#00e5ff;
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+}
+
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.loading-text{
+    margin-top:14px;
+    color:#9aa4b2;
+    font-size:13px;
+}
+
+.auth-screen{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:22px;
+}
+
+.auth-box{
+    width:100%;
+    max-width:420px;
+    padding:26px;
+    border-radius:24px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.09);
+    backdrop-filter:blur(20px);
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+}
+
+.logo{
+    width:70px;
+    height:70px;
+    margin:0 auto 16px;
+    border-radius:20px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#00e5ff,#006eff);
+    color:#fff;
+    font-size:25px;
+    font-weight:900;
+    box-shadow:0 10px 35px rgba(0,160,255,.25);
+}
+
+.auth-title{text-align:center;font-size:25px;font-weight:800;}
+.auth-subtitle{text-align:center;color:#8e98a8;font-size:13px;margin-top:7px;margin-bottom:22px;}
+
+.input-group{margin-bottom:13px;}
+
+.input-group label{
+    display:block;
+    color:#aeb7c5;
+    font-size:12px;
+    margin-bottom:7px;
+}
+
+.input-group input,
+.input-group select{
+    width:100%;
+    height:48px;
+    border-radius:13px;
+    border:1px solid rgba(255,255,255,.09);
+    outline:none;
+    background:#111722;
+    color:#fff;
+    padding:0 14px;
+}
+
+.input-group input:focus,
+.input-group select:focus{
+    border-color:#00c8ff;
+}
+
+.primary-btn{
+    width:100%;
+    height:49px;
+    border-radius:14px;
+    background:linear-gradient(135deg,#00d9ff,#087cff);
+    color:#fff;
+    font-weight:800;
+    margin-top:5px;
+}
+
+.secondary-btn{
+    width:100%;
+    height:47px;
+    border-radius:14px;
+    background:rgba(255,255,255,.07);
+    color:#fff;
+    margin-top:10px;
+}
+
+.top-header{
+    padding:18px 16px 10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.header-left h2{font-size:20px;}
+.header-left p{color:#7f8999;font-size:12px;margin-top:3px;}
+
+.header-user{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#00cfff,#426cff);
+    font-weight:800;
+}
+
+.page{
+    display:none;
+    padding:0 15px;
+    animation:pageIn .18s ease;
+}
+
+.page.active{display:block;}
+
+@keyframes pageIn{
+    from{opacity:0;transform:translateY(5px);}
+    to{opacity:1;transform:none;}
+}
+
+.balance-card{
+    margin-top:8px;
+    padding:23px;
+    border-radius:23px;
+    background:linear-gradient(135deg,#09263b,#10234b);
+    border:1px solid rgba(0,205,255,.12);
+    box-shadow:0 15px 45px rgba(0,0,0,.25);
+}
+
+.balance-label{color:#9da9ba;font-size:12px;}
+.balance{font-size:34px;font-weight:900;margin-top:7px;}
+
+.balance-row{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+}
+
+.stat{
+    flex:1;
+    background:rgba(255,255,255,.06);
+    padding:12px;
+    border-radius:14px;
+}
+
+.stat-title{color:#8c96a6;font-size:10px;}
+.stat-value{margin-top:5px;font-size:16px;font-weight:800;}
+
+.card{
+    margin-top:14px;
+    padding:18px;
+    border-radius:20px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.07);
+}
+
+.card-title{
+    font-size:16px;
+    font-weight:800;
+    margin-bottom:12px;
+}
+
+.ad-card{
+    text-align:center;
+    padding:25px 18px;
+}
+
+.ad-icon{
+    width:60px;
+    height:60px;
+    margin:0 auto 13px;
+    border-radius:18px;
+    background:rgba(0,220,255,.1);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+}
+
+.ad-card h3{font-size:18px;}
+
+.ad-card p{
+    color:#8994a5;
+    font-size:12px;
+    line-height:1.6;
+    margin:8px 0 17px;
+}
+
+.earn-btn{
+    width:100%;
+    height:49px;
+    border-radius:14px;
+    background:linear-gradient(135deg,#00e1ff,#087aff);
+    color:#fff;
+    font-weight:900;
+}
+
+.earn-btn:disabled{opacity:.55;}
+
+.form-title{
+    font-size:13px;
+    color:#9ca7b8;
+    margin-bottom:7px;
+}
+
+.withdraw-balance{
+    font-size:24px;
+    font-weight:900;
+    margin-bottom:18px;
+}
+
+.withdraw-info{
+    padding:13px;
+    border-radius:13px;
+    background:rgba(0,210,255,.07);
+    color:#9ba7b8;
+    font-size:12px;
+    line-height:1.6;
+    margin-bottom:14px;
+}
+
+.history-item{
+    padding:14px 0;
+    border-bottom:1px solid rgba(255,255,255,.06);
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+}
+
+.history-item:last-child{border-bottom:0;}
+
+.history-method{font-weight:800;font-size:14px;}
+.history-number{color:#7f8999;font-size:11px;margin-top:4px;}
+.history-right{text-align:right;}
+.history-amount{font-weight:800;}
+
+.status{
+    display:inline-block;
+    margin-top:4px;
+    padding:4px 8px;
+    border-radius:8px;
+    font-size:9px;
+    font-weight:800;
+}
+
+.status.Pending,
+.status.pending{
+    background:rgba(255,193,7,.12);
+    color:#ffc107;
+}
+
+.status.Paid,
+.status.Success,
+.status.Approved,
+.status.paid{
+    background:rgba(0,220,130,.12);
+    color:#00dc82;
+}
+
+.status.Failed,
+.status.Reject,
+.status.Rejected,
+.status.failed,
+.status.rejected{
+    background:rgba(255,70,70,.12);
+    color:#ff6464;
+}
+
+.empty{
+    text-align:center;
+    padding:35px 10px;
+    color:#737e8e;
+    font-size:13px;
+}
+
+.profile-head{
+    text-align:center;
+    padding:20px 0;
+}
+
+.profile-avatar{
+    width:72px;
+    height:72px;
+    border-radius:50%;
+    margin:auto;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#00d9ff,#4169ff);
+    font-size:25px;
+    font-weight:900;
+}
+
+.profile-name{
+    margin-top:10px;
+    font-size:19px;
+    font-weight:800;
+}
+
+.profile-email{
+    color:#7f8999;
+    font-size:12px;
+    margin-top:4px;
+}
+
+.profile-row{
+    display:flex;
+    justify-content:space-between;
+    padding:13px 0;
+    border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.profile-row:last-child{border-bottom:0;}
+
+.profile-key{color:#858f9f;font-size:12px;}
+.profile-value{font-size:12px;font-weight:700;}
+
+.bottom-nav{
+    position:fixed;
+    left:10px;
+    right:10px;
+    bottom:10px;
+    height:64px;
+    z-index:1000;
+    border-radius:20px;
+    background:rgba(13,17,26,.94);
+    border:1px solid rgba(255,255,255,.08);
+    backdrop-filter:blur(20px);
+    display:flex;
+    align-items:center;
+    justify-content:space-around;
+    box-shadow:0 15px 40px rgba(0,0,0,.35);
+}
+
+.nav-btn{
+    background:none;
+    color:#737e8d;
+    height:55px;
+    min-width:58px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:4px;
+}
+
+.nav-btn .icon{font-size:19px;}
+.nav-btn span:last-child{font-size:9px;}
+.nav-btn.active{color:#00d9ff;}
+
+#toast{
+    position:fixed;
+    left:50%;
+    bottom:90px;
+    transform:translateX(-50%) translateY(20px);
+    min-width:220px;
+    max-width:90%;
+    padding:12px 15px;
+    border-radius:13px;
+    background:#151b27;
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 12px 35px rgba(0,0,0,.4);
+    color:#fff;
+    font-size:12px;
+    text-align:center;
+    opacity:0;
+    pointer-events:none;
+    transition:.25s ease;
+    z-index:9999;
+}
+
+#toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+}
+
+.hidden{display:none!important;}
+
+.refer-box{
+    background:rgba(0,229,255,.1);
+    padding:15px;
+    border-radius:12px;
+    text-align:center;
+    margin-bottom:15px;
+    border:1px dashed #00e5ff;
+}
+
+.refer-code{
+    font-size:22px;
+    font-weight:bold;
+    color:#00e5ff;
+    letter-spacing:1px;
+    margin:5px 0;
+}
+
+/* HIGH REVENUE BANNER */
+.banner-box{
+    width:100%;
+    min-height:250px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+    margin:0 auto 18px;
+    border-radius:12px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="loadingScreen">
+    <div class="loader"></div>
+    <div class="loading-text">Starting Take Money...</div>
+</div>
+
+<div id="authScreen" class="auth-screen hidden">
+    <div class="auth-box">
+        <div class="logo">TM</div>
+
+        <div class="auth-title" id="authTitle">Welcome Back</div>
+        <div class="auth-subtitle">Login to continue earning</div>
+
+        <div id="registerNameBox" class="input-group hidden">
+            <label>Name</label>
+            <input id="registerName" type="text" placeholder="Your name">
+        </div>
+
+        <div class="input-group">
+            <label>Email</label>
+            <input id="authEmail" type="email" placeholder="Enter email">
+        </div>
+
+        <div class="input-group">
+            <label>Password</label>
+            <input id="authPassword" type="password" placeholder="Enter password">
+        </div>
+
+        <div id="registerReferBox" class="input-group hidden">
+            <label>Referral Code (Optional)</label>
+            <input id="registerReferCode" type="text" placeholder="Enter friend's Refer ID">
+        </div>
+
+        <button id="authButton" class="primary-btn" onclick="handleAuth()">Login</button>
+        <button id="authSwitchButton" class="secondary-btn" onclick="toggleAuthMode()">Create Account</button>
+    </div>
+</div>
+
+<div id="app" class="hidden">
+
+    <div class="top-header">
+        <div class="header-left">
+            <h2>Take Money</h2>
+            <p id="headerGreeting">Welcome back</p>
+        </div>
+
+        <div class="header-user" id="headerAvatar">U</div>
+    </div>
+
+    <!-- HOME -->
+    <section id="homePage" class="page active">
+
+        <div class="balance-card">
+            <div class="balance-label">Available Balance</div>
+
+            <div class="balance">
+                ৳<span id="balanceAmount">0.00</span>
+            </div>
+
+            <div class="balance-row">
+
+                <div class="stat">
+                    <div class="stat-title">ADS WATCHED</div>
+                    <div class="stat-value" id="adsWatched">0</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-title">TOTAL EARNED</div>
+                    <div class="stat-value" id="totalEarned">৳0.00</div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card ad-card">
+
+            <!-- HIGH REVENUE BANNER -->
+            <div class="banner-box">
+
+                <script>
+                  atOptions = {
+                    'key' : 'f7ea23848e819d2a01c045a1957caf28',
+                    'format' : 'iframe',
+                    'height' : 250,
+                    'width' : 300,
+                    'params' : {}
+                  };
+                </script>
+
+                <script src="https://www.highrevenueformat.com/f7ea23848e819d2a01c045a1957caf28/invoke.js"></script>
+
+            </div>
+
+            <div class="ad-icon">▶</div>
+
+            <h3>Watch Ads & Earn</h3>
+
+            <p>
+                Watch an advertisement and earn ৳
+                <span id="homeAdRewardText">0.10</span>
+            </p>
+
+            <button
+                id="homeEarnButton"
+                class="earn-btn"
+                onclick="earnNow()">
+                WATCH AD
+            </button>
+
+        </div>
+
+    </section>
+
+    <!-- EARN -->
+    <section id="earnPage" class="page">
+
+        <div class="card ad-card">
+
+            <!-- HIGH REVENUE BANNER -->
+            <div class="banner-box">
+
+                <script>
+                  atOptions = {
+                    'key' : 'f7ea23848e819d2a01c045a1957caf28',
+                    'format' : 'iframe',
+                    'height' : 250,
+                    'width' : 300,
+                    'params' : {}
+                  };
+                </script>
+
+                <script src="https://www.highrevenueformat.com/f7ea23848e819d2a01c045a1957caf28/invoke.js"></script>
+
+            </div>
+
+            <div class="ad-icon">▶</div>
+
+            <h3>Earn From Ads</h3>
+
+            <p>Tap the button below to open the advertisement.</p>
+
+            <button
+                id="earnPageButton"
+                class="earn-btn"
+                onclick="earnNow()">
+                WATCH AD
+            </button>
+
+        </div>
+
+    </section>
+
+    <!-- WITHDRAW -->
+    <section id="withdrawPage" class="page">
+
+        <div class="card">
+
+            <div class="card-title">Withdraw</div>
+
+            <div class="withdraw-balance">
+                ৳<span id="withdrawBalance">0.00</span>
+            </div>
+
+            <div class="withdraw-info">
+                Minimum withdrawal:
+                <b id="minWithdrawText">৳10.00</b>
+            </div>
+
+            <div class="input-group">
+
+                <div class="form-title">Payment Method</div>
+
+                <select id="withdrawMethod">
+                    <option value="bKash">bKash</option>
+                    <option value="Nagad">Nagad</option>
+                    <option value="Rocket">Rocket</option>
+                </select>
+
+            </div>
+
+            <div class="input-group">
+
+                <div class="form-title">Account Number</div>
+
+                <input
+                    id="withdrawNumber"
+                    type="tel"
+                    placeholder="01XXXXXXXXX">
+
+            </div>
+
+            <div class="input-group">
+
+                <div class="form-title">Amount</div>
+
+                <input
+                    id="withdrawAmount"
+                    type="number"
+                    min="10"
+                    step="0.01"
+                    placeholder="10">
+
+            </div>
+
+            <button
+                id="withdrawButton"
+                class="primary-btn"
+                onclick="submitWithdraw()">
+                REQUEST WITHDRAWAL
+            </button>
+
+        </div>
+
+    </section>
+
+    <!-- HISTORY -->
+    <section id="historyPage" class="page">
+
+        <div class="card">
+
+            <div class="card-title">Withdrawal History</div>
+
+            <div id="historyList">
+                <div class="empty">Loading history...</div>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- PROFILE -->
+    <section id="profilePage" class="page">
+
+        <div class="card">
+
+            <div class="profile-head">
+
+                <div class="profile-avatar" id="profileAvatar">U</div>
+
+                <div class="profile-name" id="profileName">User</div>
+
+                <div class="profile-email" id="profileEmail">-</div>
+
+            </div>
+
+            <div class="refer-box">
+
+                <p style="font-size:11px;color:#aeb7c5;">
+                    Your Referral Code (Your UID)
+                </p>
+
+                <div class="refer-code" id="myReferCode">
+                    LOADING...
+                </div>
+
+                <p style="font-size:11px;color:#aeb7c5;">
+                    Share this code with friends and earn ৳
+                    <span id="referRewardText">5.00</span>
+                    per invite!
+                </p>
+
+                <p style="font-size:13px;margin-top:5px;">
+                    Total Referrals:
+                    <b id="totalRefers">0</b>
+                </p>
+
+            </div>
+
+            <div class="profile-row">
+                <div class="profile-key">Telegram ID</div>
+                <div class="profile-value" id="profileTelegramId">-</div>
+            </div>
+
+            <div class="profile-row">
+                <div class="profile-key">Username</div>
+                <div class="profile-value" id="profileUsername">-</div>
+            </div>
+
+            <div class="profile-row">
+                <div class="profile-key">Account</div>
+                <div class="profile-value">Active</div>
+            </div>
+
+            <button class="secondary-btn" onclick="logoutUser()">
+                Logout
+            </button>
+
+        </div>
+
+    </section>
+
+    <nav class="bottom-nav">
+
+        <button
+            class="nav-btn active"
+            onclick="openPage('homePage',this)">
+            <span class="icon">⌂</span>
+            <span>Home</span>
+        </button>
+
+        <button
+            class="nav-btn"
+            onclick="openPage('earnPage',this)">
+            <span class="icon">▶</span>
+            <span>Earn</span>
+        </button>
+
+        <button
+            class="nav-btn"
+            onclick="openPage('withdrawPage',this)">
+            <span class="icon">৳</span>
+            <span>Withdraw</span>
+        </button>
+
+        <button
+            class="nav-btn"
+            onclick="openPage('historyPage',this)">
+            <span class="icon">◷</span>
+            <span>History</span>
+        </button>
+
+        <button
+            class="nav-btn"
+            onclick="openPage('profilePage',this)">
+            <span class="icon">●</span>
+            <span>Profile</span>
+        </button>
+
+    </nav>
+
+</div>
+
+<div id="toast"></div>
+
+
+<!-- FIREBASE SDK -->
+<script type="module">
+
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    collection,
+    query,
+    where,
+    getDocs,
+    serverTimestamp,
+    runTransaction
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+const firebaseConfig = {
+
+    apiKey:
+        "AIzaSyCQdJ8aefkK9XC24u2xD7kfOJPAyoQZGy0",
+
+    authDomain:
+        "telegram-bot-bc612.firebaseapp.com",
+
+    projectId:
+        "telegram-bot-bc612",
+
+    storageBucket:
+        "telegram-bot-bc612.firebasestorage.app",
+
+    messagingSenderId:
+        "569146454380",
+
+    appId:
+        "1:569146454380:web:0b1af1d4ec6a12d38a8349"
+};
+
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getFirestore(app);
+
+
+let CONFIG = {
+
+    rewardPerAd: 0.10,
+
+    minimumWithdraw: 10,
+
+    rewardPerReferral: 5.00,
+
+    dailyAdLimit: 10
+
+};
+
+
+const tg =
+    window.Telegram &&
+    window.Telegram.WebApp
+    ? window.Telegram.WebApp
+    : null;
+
+
+if(tg){
+
+    try{
+
+        tg.ready();
+
+        tg.expand();
+
+    }catch(e){}
+
+}
+
+
+let currentUserData = null;
+
+let authMode = "login";
+
+let rewardProcessing = false;
+
+let isLoaded = false;
+
+
+/* SMART LINK */
+
+const SMART_LINK =
+"https://www.profitableratecpmnetwork.com/n3wgbamaq?key=8f3ef6ebb4604693c1f8c188eaf9fdf6";
+
+
+window.showToast = function(message){
+
+    const toast =
+        document.getElementById("toast");
+
+    toast.textContent = message;
+
+    toast.classList.add("show");
+
+    clearTimeout(window.toastTimer);
+
+    window.toastTimer =
+        setTimeout(
+            () => toast.classList.remove("show"),
+            2500
+        );
+
+};
+
+
+function hideLoading(){
+
+    if(isLoaded) return;
+
+    isLoaded = true;
+
+    const ls =
+        document.getElementById("loadingScreen");
+
+    if(ls){
+
+        ls.style.opacity = "0";
+
+        setTimeout(
+            () => ls.style.display = "none",
+            300
+        );
+
+    }
+
+}
+
+
+function getDeviceId(){
+
+    let deviceId =
+        localStorage.getItem("app_device_id");
+
+    if(!deviceId){
+
+        deviceId =
+            "dev_" +
+            Math.random()
+                .toString(36)
+                .substring(2,15) +
+            Date.now().toString(36);
+
+        localStorage.setItem(
+            "app_device_id",
+            deviceId
+        );
+
+    }
+
+    return deviceId;
+
+}
+
+
+setTimeout(() => {
+
+    if(!isLoaded){
+
+        if(!auth.currentUser){
+
+            showLoginScreen();
+
+        }else{
+
+            showMainApp();
+
+        }
+
+        hideLoading();
+
+    }
+
+},3000);
+
+
+function showLoginScreen(){
+
+    document
+        .getElementById("app")
+        .classList.add("hidden");
+
+    document
+        .getElementById("authScreen")
+        .classList.remove("hidden");
+
+    hideLoading();
+
+}
+
+
+function showMainApp(){
+
+    document
+        .getElementById("authScreen")
+        .classList.add("hidden");
+
+    document
+        .getElementById("app")
+        .classList.remove("hidden");
+
+    hideLoading();
+
+}
+
+
+window.toggleAuthMode = function(){
+
+    if(authMode === "login"){
+
+        authMode = "register";
+
+        document.getElementById("authTitle")
+            .textContent = "Create Account";
+
+        document.getElementById("authButton")
+            .textContent = "Register";
+
+        document.getElementById("authSwitchButton")
+            .textContent = "Already have an account";
+
+        document.getElementById("registerNameBox")
+            .classList.remove("hidden");
+
+        document.getElementById("registerReferBox")
+            .classList.remove("hidden");
+
+    }else{
+
+        authMode = "login";
+
+        document.getElementById("authTitle")
+            .textContent = "Welcome Back";
+
+        document.getElementById("authButton")
+            .textContent = "Login";
+
+        document.getElementById("authSwitchButton")
+            .textContent = "Create Account";
+
+        document.getElementById("registerNameBox")
+            .classList.add("hidden");
+
+        document.getElementById("registerReferBox")
+            .classList.add("hidden");
+
+    }
+
+};
+
+
+async function loadAdminSettings(){
+
+    try{
+
+        const snap =
+            await getDoc(
+                doc(db,"settings","app")
+            );
+
+        if(snap.exists()){
+
+            const data = snap.data();
+
+            CONFIG.rewardPerAd =
+                data.rewardPerAd ?? 0.10;
+
+            CONFIG.minimumWithdraw =
+                data.minimumWithdraw ?? 10;
+
+            CONFIG.rewardPerReferral =
+                data.rewardPerReferral ?? 5.00;
+
+            CONFIG.dailyAdLimit =
+                data.dailyAdLimit ?? 10;
+
+
+            document.getElementById(
+                "minWithdrawText"
+            ).innerText =
+                "৳" + CONFIG.minimumWithdraw;
+
+
+            document.getElementById(
+                "withdrawAmount"
+            ).placeholder =
+                CONFIG.minimumWithdraw;
+
+
+            document.getElementById(
+                "withdrawAmount"
+            ).min =
+                CONFIG.minimumWithdraw;
+
+
+            document.getElementById(
+                "homeAdRewardText"
+            ).innerText =
+                CONFIG.rewardPerAd.toFixed(2);
+
+
+            document.getElementById(
+                "referRewardText"
+            ).innerText =
+                CONFIG.rewardPerReferral.toFixed(2);
+
+
+            const methodSelect =
+                document.getElementById(
+                    "withdrawMethod"
+                );
+
+
+            methodSelect.innerHTML = "";
+
+
+            if(data.bkashEnabled !== false)
+
+                methodSelect.innerHTML +=
+                    `<option value="bKash">bKash</option>`;
+
+
+            if(data.nagadEnabled !== false)
+
+                methodSelect.innerHTML +=
+                    `<option value="Nagad">Nagad</option>`;
+
+
+            if(data.rocketEnabled !== false)
+
+                methodSelect.innerHTML +=
+                    `<option value="Rocket">Rocket</option>`;
+
+
+            if(methodSelect.innerHTML === "")
+
+                methodSelect.innerHTML =
+                    `<option value="bKash">bKash</option>
+                     <option value="Nagad">Nagad</option>`;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Failed to load settings:",
+            error
+        );
+
+    }
+
+}
+
+
+window.handleAuth = async function(){
+
+    const email =
+        document.getElementById(
+            "authEmail"
+        ).value.trim();
+
+    const password =
+        document.getElementById(
+            "authPassword"
+        ).value;
+
+
+    if(!email || !password){
+
+        showToast(
+            "Please enter email and password."
+        );
+
+        return;
+
+    }
+
+
+    const button =
+        document.getElementById(
+            "authButton"
+        );
+
+
+    button.disabled = true;
+
+    button.textContent =
+        authMode === "login"
+        ? "Logging in..."
+        : "Creating...";
+
+
+    try{
+
+        if(authMode === "login"){
+
+            await signInWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+
+            showToast(
+                "Login successful."
+            );
+
+        }else{
+
+            const name =
+                document.getElementById(
+                    "registerName"
+                ).value.trim();
+
+
+            const referCode =
+                document.getElementById(
+                    "registerReferCode"
+                ).value.trim();
+
+
+            if(!name){
+
+                showToast(
+                    "Enter your name."
+                );
+
+                button.disabled = false;
+
+                button.textContent =
+                    "Register";
+
+                return;
+
+            }
+
+
+            const deviceId =
+                getDeviceId();
+
+
+            const deviceRef =
+                doc(
+                    db,
+                    "deviceIds",
+                    deviceId
+                );
+
+
+            const deviceSnap =
+                await getDoc(
+                    deviceRef
+                );
+
+
+            if(deviceSnap.exists()){
+
+                showToast(
+                    "You can only create ONE account from this device!"
+                );
+
+                button.disabled = false;
+
+                button.textContent =
+                    "Register";
+
+                return;
+
+            }
+
+
+            if(referCode){
+
+                const referSnap =
+                    await getDoc(
+                        doc(
+                            db,
+                            "users",
+                            referCode
+                        )
+                    );
+
+
+                if(!referSnap.exists()){
+
+                    showToast(
+                        "Invalid Referral Code."
+                    );
+
+                    button.disabled = false;
+
+                    button.textContent =
+                        "Register";
+
+                    return;
+
+                }
+
+            }
+
+
+            const result =
+                await createUserWithEmailAndPassword(
+                    auth,
+                    email,
+                    password
+                );
+
+
+            const tgUser =
+                tg &&
+                tg.initDataUnsafe
+                ? tg.initDataUnsafe.user
+                : null;
+
+
+            const userData = {
+
+                uid:
+                    result.user.uid,
+
+                name:
+                    name,
+
+                email:
+                    email,
+
+                deviceId:
+                    deviceId,
+
+                telegramId:
+                    tgUser
+                    ? String(tgUser.id)
+                    : "",
+
+                username:
+                    tgUser
+                    ? (tgUser.username || "")
+                    : "",
+
+                balance:
+                    0,
+
+                adsWatched:
+                    0,
+
+                totalEarned:
+                    0,
+
+                totalReferrals:
+                    0,
+
+                referredBy:
+                    referCode || null,
+
+                createdAt:
+                    serverTimestamp()
+
+            };
+
+
+            await setDoc(
+                doc(
+                    db,
+                    "users",
+                    result.user.uid
+                ),
+                userData
+            );
+
+
+            await setDoc(
+                deviceRef,
+                {
+                    registeredUid:
+                        result.user.uid,
+
+                    createdAt:
+                        serverTimestamp()
+                }
+            );
+
+
+            if(referCode){
+
+                try{
+
+                    await runTransaction(
+                        db,
+                        async(transaction) => {
+
+                            const refDoc =
+                                doc(
+                                    db,
+                                    "users",
+                                    referCode
+                                );
+
+
+                            const rSnap =
+                                await transaction.get(
+                                    refDoc
+                                );
+
+
+                            if(rSnap.exists()){
+
+                                const rData =
+                                    rSnap.data();
+
+
+                                transaction.update(
+                                    refDoc,
+                                    {
+
+                                        balance:
+                                            Number(
+                                                rData.balance || 0
+                                            ) +
+                                            CONFIG.rewardPerReferral,
+
+                                        totalEarned:
+                                            Number(
+                                                rData.totalEarned || 0
+                                            ) +
+                                            CONFIG.rewardPerReferral,
+
+                                        totalReferrals:
+                                            Number(
+                                                rData.totalReferrals || 0
+                                            ) + 1
+
+                                    }
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }catch(e){
+
+                    console.log(
+                        "Failed to give referral bonus:",
+                        e
+                    );
+
+                }
+
+            }
+
+
+            showToast(
+                "Account created successfully."
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Auth Error:",
+            error
+        );
+
+
+        let msg =
+            "Something went wrong.";
+
+
+        if(
+            error.code ===
+            "auth/invalid-credential"
+        )
+
+            msg =
+                "Invalid email or password.";
+
+
+        else if(
+            error.code ===
+            "auth/email-already-in-use"
+        )
+
+            msg =
+                "Email already exists.";
+
+
+        else if(error.message)
+
+            msg =
+                error.message;
+
+
+        showToast(msg);
+
+
+    }finally{
+
+        button.disabled = false;
+
+        button.textContent =
+            authMode === "login"
+            ? "Login"
+            : "Register";
+
+    }
+
+};
+
+
+onAuthStateChanged(
+    auth,
+    async function(user){
+
+        if(user){
+
+            showMainApp();
+
+            loadFirebaseUser(user);
+
+            loadAdminSettings();
+
+        }else{
+
+            currentUserData = null;
+
+            showLoginScreen();
+
+        }
+
+    }
+);
+
+
+async function loadFirebaseUser(user){
+
+    try{
+
+        const ref =
+            doc(
+                db,
+                "users",
+                user.uid
+            );
+
+
+        const snapshot =
+            await getDoc(ref);
+
+
+        if(snapshot.exists()){
+
+            currentUserData =
+                snapshot.data();
+
+            renderUserData();
+
+        }else{
+
+            document.getElementById(
+                "headerGreeting"
+            ).textContent =
+                "Hello, User";
+
+
+            document.getElementById(
+                "myReferCode"
+            ).textContent =
+                user.uid;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Firebase user load error:",
+            error
+        );
+
+    }
+
+}
+
+
+function renderUserData(){
+
+    if(!currentUserData)
+        return;
+
+
+    const name =
+        currentUserData.name || "User";
+
+
+    const balance =
+        Number(
+            currentUserData.balance || 0
+        );
+
+
+    const ads =
+        Number(
+            currentUserData.adsWatched || 0
+        );
+
+
+    const total =
+        Number(
+            currentUserData.totalEarned || 0
+        );
+
+
+    const refers =
+        Number(
+            currentUserData.totalReferrals || 0
+        );
+
+
+    document.getElementById(
+        "headerGreeting"
+    ).textContent =
+        "Hello, " + name;
+
+
+    document.getElementById(
+        "headerAvatar"
+    ).textContent =
+        name.charAt(0).toUpperCase();
+
+
+    document.getElementById(
+        "balanceAmount"
+    ).textContent =
+        balance.toFixed(2);
+
+
+    document.getElementById(
+        "withdrawBalance"
+    ).textContent =
+        balance.toFixed(2);
+
+
+    document.getElementById(
+        "adsWatched"
+    ).textContent =
+        ads;
+
+
+    document.getElementById(
+        "totalEarned"
+    ).textContent =
+        "৳" + total.toFixed(2);
+
+
+    document.getElementById(
+        "profileName"
+    ).textContent =
+        name;
+
+
+    document.getElementById(
+        "profileAvatar"
+    ).textContent =
+        name.charAt(0).toUpperCase();
+
+
+    document.getElementById(
+        "profileEmail"
+    ).textContent =
+        currentUserData.email || "-";
+
+
+    document.getElementById(
+        "profileTelegramId"
+    ).textContent =
+        currentUserData.telegramId || "-";
+
+
+    document.getElementById(
+        "profileUsername"
+    ).textContent =
+        currentUserData.username
+        ? "@" + currentUserData.username
+        : "-";
+
+
+    document.getElementById(
+        "myReferCode"
+    ).textContent =
+        currentUserData.uid;
+
+
+    document.getElementById(
+        "totalRefers"
+    ).textContent =
+        refers;
+
+}
+
+
+window.openPage =
+function(pageId, button){
+
+    document
+        .querySelectorAll(".page")
+        .forEach(
+            page =>
+                page.classList.remove("active")
+        );
+
+
+    document
+        .getElementById(pageId)
+        ?.classList.add("active");
+
+
+    document
+        .querySelectorAll(".nav-btn")
+        .forEach(
+            btn =>
+                btn.classList.remove("active")
+        );
+
+
+    if(button)
+        button.classList.add("active");
+
+
+    if(
+        pageId === "withdrawPage" &&
+        currentUserData
+    ){
+
+        document.getElementById(
+            "withdrawBalance"
+        ).textContent =
+            Number(
+                currentUserData.balance || 0
+            ).toFixed(2);
+
+    }
+
+
+    if(
+        pageId === "historyPage" &&
+        auth.currentUser
+    ){
+
+        loadHistory(
+            auth.currentUser.uid
+        );
+
+    }
+
+};
+
+
+/* SMART LINK WATCH AD WITH DAILY LIMIT */
+
+window.earnNow = async function(){
+
+    if(rewardProcessing){
+
+        showToast(
+            "Please wait..."
+        );
+
+        return;
+
+    }
+
+
+    if(!auth.currentUser){
+
+        showToast(
+            "Please login first."
+        );
+
+        showLoginScreen();
+
+        return;
+
+    }
+
+
+    rewardProcessing = true;
+
+
+    document.getElementById(
+        "homeEarnButton"
+    ).disabled = true;
+
+
+    document.getElementById(
+        "earnPageButton"
+    ).disabled = true;
+
+
+    try{
+
+        const userRef =
+            doc(
+                db,
+                "users",
+                auth.currentUser.uid
+            );
+
+        const todayStr =
+            new Date().toISOString().split('T')[0];
+
+        let canWatch = false;
+
+        await runTransaction(
+            db,
+            async function(transaction){
+
+                const snapshot =
+                    await transaction.get(
+                        userRef
+                    );
+
+                if(!snapshot.exists())
+
+                    throw new Error(
+                        "User not found."
+                    );
+
+                const data =
+                    snapshot.data();
+
+                let lastAdDate =
+                    data.lastAdDate || "";
+
+                let todayAdsWatched =
+                    Number(data.todayAdsWatched || 0);
+
+                if(lastAdDate !== todayStr){
+                    todayAdsWatched = 0;
+                }
+
+                if(todayAdsWatched >= CONFIG.dailyAdLimit){
+                    throw new Error("DAILY_LIMIT_EXCEEDED");
+                }
+
+                canWatch = true;
+
+                window.open(
+                    SMART_LINK,
+                    "_blank"
+                );
+
+                const newBal =
+                    Number(
+                        (
+                            Number(
+                                data.balance || 0
+                            ) +
+                            CONFIG.rewardPerAd
+                        ).toFixed(2)
+                    );
+
+                const newTot =
+                    Number(
+                        (
+                            Number(
+                                data.totalEarned || 0
+                            ) +
+                            CONFIG.rewardPerAd
+                        ).toFixed(2)
+                    );
+
+                const newAds =
+                    Number(
+                        data.adsWatched || 0
+                    ) + 1;
+
+                transaction.update(
+                    userRef,
+                    {
+                        balance:
+                            newBal,
+
+                        adsWatched:
+                            newAds,
+
+                        totalEarned:
+                            newTot,
+
+                        todayAdsWatched:
+                            todayAdsWatched + 1,
+
+                        lastAdDate:
+                            todayStr
+                    }
+                );
+
+                currentUserData = {
+
+                    ...data,
+
+                    balance:
+                        newBal,
+
+                    adsWatched:
+                        newAds,
+
+                    totalEarned:
+                        newTot
+
+                };
+
+            }
+        );
+
+
+        if(canWatch){
+            renderUserData();
+
+            showToast(
+                "৳" +
+                CONFIG.rewardPerAd.toFixed(2) +
+                " added successfully!"
+            );
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Ad Processing Error:",
+            error
+        );
+
+        if(
+            error.message ===
+            "DAILY_LIMIT_EXCEEDED"
+        ){
+
+            showToast(
+                "Today's ad limit reached! Come back tomorrow."
+            );
+
+        }else{
+
+            showToast(
+                "Failed to process reward. Try again."
+            );
+
+        }
+
+    }finally{
+
+        setTimeout(
+            () => {
+
+                rewardProcessing =
+                    false;
+
+
+                document.getElementById(
+                    "homeEarnButton"
+                ).disabled =
+                    false;
+
+
+                document.getElementById(
+                    "earnPageButton"
+                ).disabled =
+                    false;
+
+            },
+            1000
+        );
+
+    }
+
+};
+
+
+window.submitWithdraw =
+async function(){
+
+    const user =
+        auth.currentUser;
+
+
+    if(!user)
+        return;
+
+
+    const method =
+        document.getElementById(
+            "withdrawMethod"
+        ).value;
+
+
+    const number =
+        document.getElementById(
+            "withdrawNumber"
+        ).value.trim();
+
+
+    const amount =
+        Number(
+            document.getElementById(
+                "withdrawAmount"
+            ).value
+        );
+
+
+    if(!method){
+
+        showToast(
+            "No payment method available."
+        );
+
+        return;
+
+    }
+
+
+    if(!number){
+
+        showToast(
+            "Enter account number."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !amount ||
+        amount <
+        CONFIG.minimumWithdraw
+    ){
+
+        showToast(
+            "Minimum withdrawal is ৳" +
+            CONFIG.minimumWithdraw.toFixed(2)
+        );
+
+        return;
+
+    }
+
+
+    const btn =
+        document.getElementById(
+            "withdrawButton"
+        );
+
+
+    btn.disabled = true;
+
+    btn.textContent =
+        "PROCESSING...";
+
+
+    try{
+
+        const userRef =
+            doc(
+                db,
+                "users",
+                user.uid
+            );
+
+
+        await runTransaction(
+            db,
+            async function(transaction){
+
+                const snapshot =
+                    await transaction.get(
+                        userRef
+                    );
+
+
+                const data =
+                    snapshot.data();
+
+
+                const balance =
+                    Number(
+                        data.balance || 0
+                    );
+
+
+                if(amount > balance)
+
+                    throw new Error(
+                        "INSUFFICIENT_BALANCE"
+                    );
+
+
+                const newBalance =
+                    Number(
+                        (
+                            balance - amount
+                        ).toFixed(2)
+                    );
+
+
+                const withdrawalRef =
+                    doc(
+                        collection(
+                            db,
+                            "withdrawals"
+                        )
+                    );
+
+
+                transaction.update(
+                    userRef,
+                    {
+                        balance:
+                            newBalance
+                    }
+                );
+
+
+                transaction.set(
+                    withdrawalRef,
+                    {
+
+                        userId:
+                            user.uid,
+
+                        uid:
+                            user.uid,
+
+                        name:
+                            currentUserData?.name ||
+                            "User",
+
+                        email:
+                            user.email || "",
+
+                        method:
+                            method,
+
+                        number:
+                            number,
+
+                        amount:
+                            Number(
+                                amount.toFixed(2)
+                            ),
+
+                        status:
+                            "Pending",
+
+                        createdAt:
+                            serverTimestamp()
+
+                    }
+                );
+
+
+                currentUserData.balance =
+                    newBalance;
+
+            }
+        );
+
+
+        renderUserData();
+
+
+        document.getElementById(
+            "withdrawNumber"
+        ).value = "";
+
+
+        document.getElementById(
+            "withdrawAmount"
+        ).value = "";
+
+
+        showToast(
+            "Withdrawal request submitted."
+        );
+
+
+        loadHistory(
+            user.uid
+        );
+
+
+    }catch(error){
+
+        if(
+            error.message ===
+            "INSUFFICIENT_BALANCE"
+        ){
+
+            showToast(
+                "Insufficient balance."
+            );
+
+        }else{
+
+            showToast(
+                "Withdrawal failed."
+            );
+
+        }
+
+    }finally{
+
+        btn.disabled = false;
+
+        btn.textContent =
+            "REQUEST WITHDRAWAL";
+
+    }
+
+};
+
+
+async function loadHistory(uid){
+
+    const list =
+        document.getElementById(
+            "historyList"
+        );
+
+
+    try{
+
+        const q =
+            query(
+                collection(
+                    db,
+                    "withdrawals"
+                ),
+                where(
+                    "uid",
+                    "==",
+                    uid
+                )
+            );
+
+
+        const snapshot =
+            await getDocs(q);
+
+
+        if(snapshot.empty){
+
+            list.innerHTML =
+                `<div class="empty">
+                    No withdrawal history yet.
+                </div>`;
+
+            return;
+
+        }
+
+
+        let records = [];
+
+
+        snapshot.forEach(
+            docSnap => {
+
+                records.push(
+                    docSnap.data()
+                );
+
+            }
+        );
+
+
+        records.sort(
+            (a,b) => {
+
+                const timeA =
+                    a.createdAt &&
+                    a.createdAt.toMillis
+                    ? a.createdAt.toMillis()
+                    : 0;
+
+
+                const timeB =
+                    b.createdAt &&
+                    b.createdAt.toMillis
+                    ? b.createdAt.toMillis()
+                    : 0;
+
+
+                return timeB - timeA;
+
+            }
+        );
+
+
+        let html = "";
+
+
+        records.forEach(
+            data => {
+
+                const date =
+                    data.createdAt &&
+                    data.createdAt.toDate
+                    ? data.createdAt
+                        .toDate()
+                        .toLocaleString()
+                    : "";
+
+
+                const statusClass =
+                    (
+                        data.status ||
+                        "Pending"
+                    )
+                    .trim()
+                    .replace(
+                        /\s+/g,
+                        ''
+                    );
+
+
+                html += `
+
+                <div class="history-item">
+
+                    <div>
+
+                        <div class="history-method">
+                            ${data.method}
+                        </div>
+
+                        <div class="history-number">
+                            ${data.number}
+                            <br>
+                            <small>${date}</small>
+                        </div>
+
+                    </div>
+
+                    <div class="history-right">
+
+                        <div class="history-amount">
+                            ৳${Number(
+                                data.amount
+                            ).toFixed(2)}
+                        </div>
+
+                        <div class="status ${statusClass}">
+                            ${data.status}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                `;
+
+            }
+        );
+
+
+        list.innerHTML =
+            html;
+
+
+    }catch(e){
+
+        console.error(
+            "History Error:",
+            e
+        );
+
+
+        list.innerHTML =
+            `<div class="empty">
+                Unable to load history.
+            </div>`;
+
+    }
+
+}
+
+
+window.logoutUser =
+async function(){
+
+    try{
+
+        await signOut(auth);
+
+        currentUserData =
+            null;
+
+        showLoginScreen();
+
+        showToast(
+            "Logged out."
+        );
+
+    }catch(error){
+
+        showToast(
+            "Logout failed."
+        );
+
+    }
+
+};
+
+</script>
+
+</body>
+</html>
